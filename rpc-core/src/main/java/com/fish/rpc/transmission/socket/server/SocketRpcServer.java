@@ -3,6 +3,7 @@ package com.fish.rpc.transmission.socket.server;
 import com.fish.rpc.constant.RpcConstant;
 import com.fish.rpc.factory.SingletonFactory;
 import com.fish.rpc.provider.impl.ZkServiceProvider;
+import com.fish.rpc.util.ShutdownHookUtils;
 import lombok.extern.slf4j.Slf4j;
 import com.fish.rpc.config.RpcServiceConfig;
 import com.fish.rpc.handler.RpcReqHandler;
@@ -38,6 +39,7 @@ public class SocketRpcServer implements RpcServer {
     }
     @Override
     public void start() {
+        ShutdownHookUtils.clearAll();
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             log.info("服务启动，端口： {}", port);
             Socket socket;

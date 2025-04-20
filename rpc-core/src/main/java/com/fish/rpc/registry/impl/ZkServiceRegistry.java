@@ -6,8 +6,10 @@ import com.fish.rpc.factory.SingletonFactory;
 import com.fish.rpc.registry.ServiceRegistry;
 import com.fish.rpc.registry.zk.ZkClient;
 import com.fish.rpc.util.IPUtils;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 /**
@@ -32,5 +34,13 @@ public class ZkServiceRegistry implements ServiceRegistry {
 
         String path = RpcConstant.ZK_RPC_ROOT_PATH + StrUtil.SLASH + rpcServiceName + StrUtil.SLASH + IPUtils.toIpPort(address);
         zkClient.createPersistentNode(path);
+    }
+
+    @SneakyThrows
+    @Override
+    public void clearAll() {
+        String host = InetAddress.getLocalHost().getHostAddress();
+        int port = RpcConstant.SERVER_PORT;
+        zkClient.clearAll(new InetSocketAddress(host, port));
     }
 }
