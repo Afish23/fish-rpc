@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Arrays;
+
 /**
  * @author Afish
  * @date 2025/4/21 16:45
@@ -16,4 +18,9 @@ public enum SerializeType {
 
     private final byte code;
     private final String desc;
+
+    public static SerializeType from(byte code) {
+        return Arrays.stream(values()).filter(s -> s.code == code).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("code异常" + code));
+    }
 }

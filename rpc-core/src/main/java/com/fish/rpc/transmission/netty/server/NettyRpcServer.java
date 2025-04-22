@@ -3,16 +3,15 @@ package com.fish.rpc.transmission.netty.server;
 import com.fish.rpc.config.RpcServiceConfig;
 import com.fish.rpc.constant.RpcConstant;
 import com.fish.rpc.transmission.RpcServer;
+import com.fish.rpc.transmission.netty.codec.NettyRpcDecode;
+import com.fish.rpc.transmission.netty.codec.NettyRpcEncode;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.sctp.nio.NioSctpServerChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +34,8 @@ public class NettyRpcServer implements RpcServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
-                            channel.pipeline().addLast(new StringDecoder());
-                            channel.pipeline().addLast(new StringEncoder());
+                            channel.pipeline().addLast(new NettyRpcDecode());
+                            channel.pipeline().addLast(new NettyRpcEncode());
                             channel.pipeline().addLast(new NettyRpcServerHandler());
                         }
                     });

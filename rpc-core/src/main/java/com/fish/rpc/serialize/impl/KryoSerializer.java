@@ -1,12 +1,14 @@
 package com.fish.rpc.serialize.impl;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.fish.rpc.dto.RpcReq;
 import com.fish.rpc.dto.RpcResp;
 import com.fish.rpc.serialize.Serializer;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -39,6 +41,14 @@ public class KryoSerializer implements Serializer {
 
     @Override
     public <T> T deserialize(byte[] bytes, Class<T> clazz) {
-        return null;
+        try (ByteArrayInputStream ois = new ByteArrayInputStream(bytes); Input input = new Input(ois)){
+            Kryo kryo = KRYO_THREAD_LOCAL.get();
+            return kryo.readObject(input, clazz);
+        }catch (Exception e){
+            log.error("kryo反序列化失败", e);
+            throw new RuntimeException(e);
+        }finally {
+            KRYO_THREAD_LOCAL.remove();
+        }
     }
 }

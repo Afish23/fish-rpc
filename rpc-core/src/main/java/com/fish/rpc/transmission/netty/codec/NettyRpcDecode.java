@@ -1,0 +1,80 @@
+package com.fish.rpc.transmission.netty.codec;
+
+import cn.hutool.core.util.ArrayUtil;
+import com.fish.rpc.compress.Compress;
+import com.fish.rpc.compress.impl.GzipCompress;
+import com.fish.rpc.constant.RpcConstant;
+import com.fish.rpc.dto.RpcReq;
+import com.fish.rpc.dto.RpcResp;
+import com.fish.rpc.enums.CompressType;
+import com.fish.rpc.enums.MsgType;
+import com.fish.rpc.enums.SerializeType;
+import com.fish.rpc.enums.VersionType;
+import com.fish.rpc.exception.RpcException;
+import com.fish.rpc.factory.SingletonFactory;
+import com.fish.rpc.serialize.Serializer;
+import com.fish.rpc.serialize.impl.KryoSerializer;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+
+/**
+ * @author Afish
+ * @date 2025/4/22 17:30
+ */
+public class NettyRpcDecode extends LengthFieldBasedFrameDecoder {
+    public NettyRpcDecode() {
+        super(RpcConstant.REQ_MAx_LEN, 5, 4, -9, 0);
+    }
+
+    @Override
+    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+         ByteBuf frame= (ByteBuf) super.decode(ctx, in);
+         return decodeFrame(frame);
+    }
+
+    private Object decodeFrame(ByteBuf byteBuf) {
+        readAndCheckMagicCode(byteBuf);
+        byte versionCode = byteBuf.readByte();
+        VersionType versionType = VersionType.from(versionCode);
+        int msgLen = byteBuf.readInt();
+        byte msgTypeCode = byteBuf.readByte();
+        MsgType msgType = MsgType.from(msgTypeCode);
+        byte serializeTypeCode = byteBuf.readByte();
+        SerializeType serializeType = SerializeType.from(serializeTypeCode);
+        byte compressTypeCode = byteBuf.readByte();
+        CompressType compressType = CompressType.from(compressTypeCode);
+        int reqId = byteBuf.readInt();
+
+        return readData(byteBuf, msgLen - RpcConstant.REQ_HEAD_LEN, msgType);
+    }
+
+    private void readAndCheckMagicCode(ByteBuf byteBuf) {
+        byte[] magicBytes = new byte[RpcConstant.RPC_MAGIC_CODE.length];
+        byteBuf.readBytes(magicBytes);
+        if (!ArrayUtil.equals(magicBytes, RpcConstant.RPC_MAGIC_CODE)) {
+            throw new RpcException("魔法值异常" + new String(magicBytes));
+        }
+    }
+
+    private Object readData(ByteBuf byteBuf, int dataLen, MsgType msgType) {
+        if (msgType.isReq()){
+            return readData(byteBuf, dataLen, RpcReq.class);
+        }
+        return readData(byteBuf, dataLen, RpcResp.class);
+    }
+
+    private <T> T readData(ByteBuf byteBuf, int dataLen, Class<T> clazz) {
+        if (dataLen <= 0){
+            return null;
+        }
+
+        byte[] data = new byte[dataLen];
+        byteBuf.readBytes(data);
+
+        Compress compress = SingletonFactory.getInstance(GzipCompress.class);
+        data = compress.decompress(data);
+        Serializer serializer = SingletonFactory.getInstance(KryoSerializer.class);
+        return serializer.deserialize(data, clazz);
+    }
+}

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Arrays;
+
 /**
  * @author Afish
  * @date 2025/4/21 16:42
@@ -19,4 +21,17 @@ public enum MsgType {
 
     private final byte code;
     private final String desc;
+
+    public boolean isHeartbeat() {
+        return this == HEARTBEAT_RESP || this == HEARTBEAT_REQ;
+    }
+
+    public boolean isReq() {
+        return this == RPC_REQ || this == HEARTBEAT_REQ;
+    }
+
+    public static MsgType from(byte code) {
+        return Arrays.stream(values()).filter(m -> m.code == code).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("code异常" + code));
+    }
 }

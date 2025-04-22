@@ -6,6 +6,8 @@ import com.fish.rpc.constant.RpcConstant;
 import com.fish.rpc.dto.RpcReq;
 import com.fish.rpc.dto.RpcResp;
 import com.fish.rpc.transmission.RpcClient;
+import com.fish.rpc.transmission.netty.codec.NettyRpcDecode;
+import com.fish.rpc.transmission.netty.codec.NettyRpcEncode;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -37,8 +39,8 @@ public class NettyRpcClient implements RpcClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel channel) throws Exception {
-                        channel.pipeline().addLast(new StringDecoder());
-                        channel.pipeline().addLast(new StringEncoder());
+                        channel.pipeline().addLast(new NettyRpcDecode());
+                        channel.pipeline().addLast(new NettyRpcEncode());
                         channel.pipeline().addLast(new NettyRpcClientHandler());
                     }
                 });
