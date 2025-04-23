@@ -8,6 +8,7 @@ import com.fish.rpc.provider.ServiceProvider;
 import com.fish.rpc.registry.ServiceRegistry;
 import com.fish.rpc.registry.impl.ZkServiceRegistry;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @author Afish
  * @date 2025/4/19 17:54
  */
+@Slf4j
 public class ZkServiceProvider implements ServiceProvider {
     private final Map<String, Object> SERVICE_CACHE = new HashMap<>();
     private final ServiceRegistry serviceRegistry;
@@ -54,6 +56,7 @@ public class ZkServiceProvider implements ServiceProvider {
 
         InetSocketAddress address = new InetSocketAddress(host, port);
         serviceRegistry.registerService(rpcServiceName, address);
+        log.info("注册服务, rpcServiceName={}, address={}", rpcServiceName, address);
         SERVICE_CACHE.put(rpcServiceName, service);
     }
 }

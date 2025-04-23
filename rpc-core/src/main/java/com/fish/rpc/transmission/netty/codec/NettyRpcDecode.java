@@ -4,6 +4,7 @@ import cn.hutool.core.util.ArrayUtil;
 import com.fish.rpc.compress.Compress;
 import com.fish.rpc.compress.impl.GzipCompress;
 import com.fish.rpc.constant.RpcConstant;
+import com.fish.rpc.dto.RpcMsg;
 import com.fish.rpc.dto.RpcReq;
 import com.fish.rpc.dto.RpcResp;
 import com.fish.rpc.enums.CompressType;
@@ -36,7 +37,7 @@ public class NettyRpcDecode extends LengthFieldBasedFrameDecoder {
     private Object decodeFrame(ByteBuf byteBuf) {
         readAndCheckMagicCode(byteBuf);
         byte versionCode = byteBuf.readByte();
-        VersionType versionType = VersionType.from(versionCode);
+        VersionType version = VersionType.from(versionCode);
         int msgLen = byteBuf.readInt();
         byte msgTypeCode = byteBuf.readByte();
         MsgType msgType = MsgType.from(msgTypeCode);
@@ -46,7 +47,15 @@ public class NettyRpcDecode extends LengthFieldBasedFrameDecoder {
         CompressType compressType = CompressType.from(compressTypeCode);
         int reqId = byteBuf.readInt();
 
-        return readData(byteBuf, msgLen - RpcConstant.REQ_HEAD_LEN, msgType);
+        Object data = readData(byteBuf, msgLen - RpcConstant.REQ_HEAD_LEN, msgType);
+        return RpcMsg.builder()
+                .reqId(reqId)
+                .msgType(msgType)
+                .version(version)
+                .compressType(compressType)
+                .serializeType(serializeType)
+                .data(data)
+                .build();
     }
 
     private void readAndCheckMagicCode(ByteBuf byteBuf) {
