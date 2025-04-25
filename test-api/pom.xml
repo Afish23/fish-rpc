@@ -10,5 +10,11 @@
     <artifactId>test-api</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.fish</groupId>
+            <artifactId>rpc-core</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

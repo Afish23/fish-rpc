@@ -1,19 +1,25 @@
 package com.fish.rpc.proxy;
 
 import cn.hutool.core.util.IdUtil;
+import com.fish.rpc.annotation.Retry;
 import com.fish.rpc.config.RpcServiceConfig;
 import com.fish.rpc.dto.RpcReq;
 import com.fish.rpc.dto.RpcResp;
 import com.fish.rpc.enums.RpcRespStatus;
 import com.fish.rpc.exception.RpcException;
 import com.fish.rpc.transmission.RpcClient;
-import com.fish.rpc.transmission.socket.client.SocketRpcClient;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class RpcClientProxy implements InvocationHandler {
     private final RpcClient rpcClient;
@@ -47,6 +53,21 @@ public class RpcClientProxy implements InvocationHandler {
                 .group(config.getGroup())
                 .build();
 
+        Retry retry = method.getAnnotation(Retry.class);
+        if(Objects.isNull(retry)){
+            return sendReq(rpcReq);
+        }
+        Retryer<Object> retryer = RetryerBuilder.newBuilder()
+                .retryIfExceptionOfType(retry.value())
+                .withStopStrategy(StopStrategies.stopAfterAttempt(retry.maxAttempts()))
+                .withWaitStrategy(WaitStrategies.fixedWait(retry.delay(), TimeUnit.MILLISECONDS))
+                .build();
+
+        return retryer.call(()->sendReq(rpcReq));
+    }
+
+    @SneakyThrows
+    private Object sendReq(RpcReq rpcReq)  {
         Future<RpcResp<?>> future = rpcClient.sendReq(rpcReq);
         RpcResp<?> rpcResp = future.get();
         check(rpcReq, rpcResp);
