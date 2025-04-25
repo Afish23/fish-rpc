@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2025/4/22 17:30
  */
 public class NettyRpcEncode extends MessageToByteEncoder<RpcMsg> {
+    private static final AtomicInteger ID_GEN = new AtomicInteger(0);
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, RpcMsg rpcMsg, ByteBuf byteBuf) throws Exception {
@@ -29,7 +30,7 @@ public class NettyRpcEncode extends MessageToByteEncoder<RpcMsg> {
         byteBuf.writeByte(rpcMsg.getMsgType().getCode());
         byteBuf.writeByte(rpcMsg.getSerializeType().getCode());
         byteBuf.writeByte(rpcMsg.getCompressType().getCode());
-        byteBuf.writeInt(rpcMsg.getReqId());
+        byteBuf.writeInt(ID_GEN.incrementAndGet());
         int msgLen = RpcConstant.REQ_HEAD_LEN;
         if (!rpcMsg.getMsgType().isHeartbeat() && !Objects.isNull(rpcMsg.getData())){
             byte[] data = data2Bytes(rpcMsg);
