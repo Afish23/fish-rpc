@@ -1,7 +1,10 @@
 package com.fish.rpc.proxy;
 
 import cn.hutool.core.util.IdUtil;
+import com.fish.rpc.annotation.Breaker;
 import com.fish.rpc.annotation.Retry;
+import com.fish.rpc.breaker.CircuitBreaker;
+import com.fish.rpc.breaker.CircuitBreakerManager;
 import com.fish.rpc.config.RpcServiceConfig;
 import com.fish.rpc.dto.RpcReq;
 import com.fish.rpc.dto.RpcResp;
@@ -53,6 +56,28 @@ public class RpcClientProxy implements InvocationHandler {
                 .group(config.getGroup())
                 .build();
 
+        Breaker breaker = method.getAnnotation(Breaker.class);
+        if (Objects.isNull(breaker)) {
+            return sendReqWithRetry(rpcReq, method);
+        }
+
+        CircuitBreaker circuitBreaker = CircuitBreakerManager.get(rpcReq.rpcServiceName(), breaker);
+        if (!circuitBreaker.canReq()){
+            throw new RpcException("已被熔断处理");
+        }
+
+        try {
+            Object o = sendReqWithRetry(rpcReq, method);
+            circuitBreaker.success();
+            return o;
+        } catch (Exception e) {
+            circuitBreaker.fail();
+            throw e;
+        }
+    }
+
+    @SneakyThrows
+    private Object sendReqWithRetry(RpcReq rpcReq, Method method) {
         Retry retry = method.getAnnotation(Retry.class);
         if(Objects.isNull(retry)){
             return sendReq(rpcReq);
