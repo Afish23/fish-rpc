@@ -1,5 +1,7 @@
 package com.fish.rpc.loadbalance;
 
+import com.fish.rpc.dto.RpcReq;
+
 import java.util.List;
 
 /**
@@ -7,5 +9,5 @@ import java.util.List;
  * @date 2025/4/19 17:47
  */
 public interface LoadBalance {
-    public String select(List<String> list);
+    public String select(List<String> list, RpcReq rpcReq);
 }
