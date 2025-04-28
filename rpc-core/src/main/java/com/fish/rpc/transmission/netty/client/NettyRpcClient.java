@@ -16,6 +16,7 @@ import com.fish.rpc.registry.impl.ZkServiceDiscovery;
 import com.fish.rpc.transmission.RpcClient;
 import com.fish.rpc.transmission.netty.codec.NettyRpcDecode;
 import com.fish.rpc.transmission.netty.codec.NettyRpcEncode;
+import com.fish.rpc.util.ConfigUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -78,9 +79,12 @@ public class NettyRpcClient implements RpcClient {
         InetSocketAddress address = serviceDiscovery.lookupService(req);
         Channel channel = channelPool.get(address, () -> connect(address));
         log.info("nettyRpcClient连接到: {}", address);
+
+        String serializer = ConfigUtils.getRpcConfig().getSerializer();
+
         RpcMsg rpcMsg = RpcMsg.builder()
                 .version(VersionType.VERSION1)
-                .serializeType(SerializeType.KRYO)
+                .serializeType(SerializeType.from(serializer))
                 .compressType(CompressType.GZIP)
                 .msgType(MsgType.RPC_REQ)
                 .data(req)

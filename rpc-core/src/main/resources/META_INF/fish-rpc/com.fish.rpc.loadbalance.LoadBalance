@@ -1,0 +1,5 @@
+consistentHash = com.fish.rpc.loadbalance.impl.ConsistentHashLoadBalance
+
+random = com.fish.rpc.loadbalance.impl.RandomLoadBalance
+
+round = com.fish.rpc.loadbalance.impl.RoundLoadBalance

@@ -1,0 +1,5 @@
+hessian = com.fish.rpc.serialize.impl.HessianSerializer
+
+kryo = com.fish.rpc.serialize.impl.KryoSerializer
+
+protostuff = com.fish.rpc.serialize.impl.ProtostuffSerializer

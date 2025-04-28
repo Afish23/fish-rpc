@@ -7,6 +7,7 @@ import com.fish.rpc.dto.RpcMsg;
 import com.fish.rpc.factory.SingletonFactory;
 import com.fish.rpc.serialize.Serializer;
 import com.fish.rpc.serialize.impl.KryoSerializer;
+import com.fish.rpc.spi.CustomLoader;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -44,10 +45,8 @@ public class NettyRpcEncode extends MessageToByteEncoder<RpcMsg> {
     }
 
     private byte[] data2Bytes(RpcMsg rpcMsg) {
-        //TODO 获取序列化和数据压缩类型
-        //rpcMsg.getSerializeType();
-        //rpcMsg.getCompressType();
-        Serializer serializer = SingletonFactory.getInstance(KryoSerializer.class);
+        String serializerTypeStr = rpcMsg.getSerializeType().getDesc();
+        Serializer serializer = CustomLoader.getLoader(Serializer.class).get(serializerTypeStr);
         byte[] data = serializer.serialize(rpcMsg.getData());
         Compress compress = SingletonFactory.getInstance(GzipCompress.class);
         return compress.compress(data);

@@ -30,6 +30,7 @@ public class KryoSerializer implements Serializer {
             Kryo kryo = KRYO_THREAD_LOCAL.get();
             kryo.writeObject(output, obj);
             output.flush();
+            log.info("========使用Kryo做序列化========");
             return oos.toByteArray();
         }catch (Exception e){
             log.error("kryo序列化失败", e);
@@ -43,6 +44,7 @@ public class KryoSerializer implements Serializer {
     public <T> T deserialize(byte[] bytes, Class<T> clazz) {
         try (ByteArrayInputStream ois = new ByteArrayInputStream(bytes); Input input = new Input(ois)){
             Kryo kryo = KRYO_THREAD_LOCAL.get();
+            log.info("========使用Kryo做反序列化========");
             return kryo.readObject(input, clazz);
         }catch (Exception e){
             log.error("kryo反序列化失败", e);
